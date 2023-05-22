@@ -1,44 +1,24 @@
 """Logic for interacting with sphinx-build."""
 
-import shlex
+import shutil
 import subprocess
 import sys
-import shutil
-from typing import List, Tuple
-
 from pathlib import Path
+from typing import List, Optional
 
 from sphinx_cache.logging import show
 
-SPHINX_BUILD_OPTIONS = (
-    ("b", "builder"),
-    ("a", None),
-    ("E", None),
-    ("d", "path"),
-    ("j", "N"),
-    ("c", "path"),
-    ("C", None),
-    ("D", "setting=value"),
-    ("t", "tag"),
-    ("A", "name=value"),
-    ("n", None),
-    ("v", None),
-    ("q", None),
-    ("Q", None),
-    ("w", "file"),
-    ("W", None),
-    ("T", None),
-    ("N", None),
-    ("P", None),
-)
 
-
-def get_builder(sphinx_args: List[str]):
-    """Prepare the function that calls sphinx."""
+def get_builder(sphinx_args: List[str]) -> int:
+    """
+    Prepare the function that calls sphinx-build.
+    :param sphinx_args: List object containing sphinx build arguments
+    :return: Sphinx Build subprocess return code
+    """
     sphinx_command = [sys.executable, "-m", "sphinx"] + sphinx_args
 
-    def build():
-        """Generate the documentation using ``sphinx``."""
+    def build() -> int:
+        """Generate the documentation using ``sphinx-build``."""
 
         try:
             remove_dir_command = ["rm", "-fr", sphinx_args[-1]]
@@ -53,15 +33,53 @@ def get_builder(sphinx_args: List[str]):
     return build()
 
 
-def check_env_pickle_exist(src: Path, dst: Path, reverse: bool = False) -> bool:
-    pass
+def check_env_pickle_exist(doctreedir: Path) -> Optional[bool]:
+    """
+    Function to check if the `environment.pickle` file is in the `.doctrees` directory
+
+    :param doctreedir:  path to the `.doctrees` directory
+    :return: True or False
+    """
+    doctree_dir = doctreedir  # path to the `.doctrees` directory
+    if doctree_dir.exists():
+        return doctree_dir.joinpath("environment.pickle") in doctree_dir.iterdir()
+    return None
 
 
-def folder_transfer(src: Path, dst: Path, reverse: bool = False) -> None:
-    # check_env_pickle_exist()
+def restore_command_invoked(doctreedir: Path, cachedir: Path):
+    """
+    Function to restore contents from the cache directory to the `.doctrees` directory
 
-    try:
-        show(context="✅Done")
-    except Exception as e:
-        show(context=f"❌Error - Reason: {e}", error=True)
+    :param doctreedir: path to the `.doctrees` directory.
+    :param cachedir: path to the `cache` directory.
+    """
+    env_pickle_exist = check_env_pickle_exist(doctreedir)
+    if not env_pickle_exist:
+        try:
+            shutil.copytree(cachedir, doctreedir, dirs_exist_ok=True)  # Copy cache directory to .doctrees directory
+            show(context="- ✅Done")
+        except Exception as e:
+            show(context=f"- ❌Error - Reason: {e}", error=True)
+    else:
+        show(context=f"- ⚠️`environment.pickle` file exists already in {doctreedir}")
 
+
+def store_command_invoked(doctreedir: Path, cachedir: Path):
+    """
+    Function to store contents from the `.doctrees` directory to the cache directory.
+
+    :param doctreedir: path to the `.doctrees` directory.
+    :param cachedir: path to the `cache` directory.
+    :return:
+    """
+    env_pickle_exist = check_env_pickle_exist(doctreedir)
+    if env_pickle_exist:
+        try:
+            shutil.rmtree(cachedir, ignore_errors=True)  # Delete old cachedir directory
+            shutil.copytree(doctreedir, cachedir, dirs_exist_ok=True)  # Copy .doctrees directory to cache directory
+            show(context="- ✅Done")
+        except Exception as e:
+            show(context=f"- ❌Error - Reason: {e}", error=True)
+
+    else:
+        show(context=f"️- ⚠️`environment.pickle` file exists already in {doctreedir}")

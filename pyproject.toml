@@ -4,7 +4,7 @@ name = "sphinx-cache"
 # !! Don't miss updates in version.py, and changelog.rst!!!
 version = "0.0.1"
 
-description = "A flexible tool to check certain requirements before and after CI builds."
+description = "A flexible CLI tool to store and restore Sphinx .doctree cache."
 authors = ["team useblocks <info@useblocks.com>"]
 license = "MIT"
 readme = "README.rst"

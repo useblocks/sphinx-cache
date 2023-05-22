@@ -1,4 +1,4 @@
-SRC_FILES = sphinx-cache/
+SRC_FILES = sphinx_cache/
 
 .PHONY: list
 list:

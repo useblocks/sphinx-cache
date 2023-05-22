@@ -1,13 +1,10 @@
 import os
-from typing import Tuple
+from pathlib import Path
 
 import click
-from pathlib import Path
-from click_option_group import optgroup
-
 
 from .logging import show
-from .utils import folder_transfer
+from .utils import get_builder, restore_command_invoked, store_command_invoked
 from .version import __version__
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -20,78 +17,100 @@ def cli() -> None:
 
 
 @cli.command("store", short_help="command to store contents from `.doctrees` folder to target folder")
-@click.argument('sourcedir', type=click.Path(exists=True, file_okay=False))
-@click.argument('targetdir', type=click.Path(file_okay=False))
-def sc_store(sourcedir: str, targetdir: str) -> None:
+@click.argument("doctreedir", type=click.Path(exists=True, file_okay=False))
+@click.argument("cachedir", type=click.Path(file_okay=False))
+def sc_store(doctreedir: str, cachedir: str) -> None:
     """
-    Command to copy contents of the `.doctrees` folder to a target folder.
+    Command to store contents from the `.doctrees` directory to the cache directory.
 
     Args: \n
-    \tSOURCEDIR is path to source folder. \n
-    \tTARGETDIR is path to destination folder.
+    \tDOCTREEDIR is the path to the `.doctrees` directory. \n
+    \tCACHEDIR is the path to the cache directory.
     """
-    src_dir = Path(os.path.realpath(sourcedir))
-    out_dir = Path(os.path.realpath(targetdir))
+    doctree_dir = Path(os.path.realpath(doctreedir))
+    cache_dir = Path(os.path.realpath(cachedir))
 
-    if not os.path.exists(out_dir):
-        show(context=f"Creating target folder: {targetdir}")
-        os.makedirs(out_dir)
+    if not cache_dir.exists():
+        show(context=f"- Creating new cache directory: {cache_dir} , if not found...")
+        cache_dir.mkdir(parents=True)
 
-    show(context=f"Storing `.doctrees` cache from {sourcedir} to {targetdir}")
-    folder_transfer(src_dir, out_dir)
+    show(context=f"- Storing `.doctrees` contents from {doctreedir} to {cachedir}...")
+    store_command_invoked(doctree_dir, cache_dir)
 
 
 @cli.command("restore", short_help="command to restore contents from target folder to `.doctrees` folder")
-@click.argument('sourcedir', type=click.Path(exists=True, file_okay=False))
-@click.argument('targetdir', type=click.Path(exists=True, file_okay=False))
-def sc_restore(sourcedir: str, targetdir: str) -> None:
+@click.argument("cachedir", type=click.Path(exists=True, file_okay=False))
+@click.argument("doctreedir", type=click.Path(file_okay=False))
+def sc_restore(cachedir: str, doctreedir: str) -> None:
     """
-    Command to restore contents of the target folder to the `.doctrees` folder.
+    Command to restore contents from the cache directory to the `.doctrees` directory.
 
     Args: \n
-    \tSOURCEDIR is path to source folder. \n
-    \tTARGETDIR is path to destination folder.
+    \tCACHEDIR is the path to the cache directory. \n
+    \tDOCTREEDIR is the path to the `.doctrees` directory.
     """
-    src_dir = Path(os.path.realpath(sourcedir))
-    out_dir = Path(os.path.realpath(targetdir))
+    cache_dir = Path(os.path.realpath(cachedir))
+    doctree_dir = Path(os.path.realpath(doctreedir))
 
-    show(context=f"Restoring `.doctrees` cache from {sourcedir} to {targetdir}")
-    folder_transfer(src_dir, out_dir, reverse=True)
+    if not doctree_dir.exists():
+        show(context=f"- Creating `.doctrees` directory: {doctree_dir}, if not found...")
+        doctree_dir.mkdir(parents=True)
+
+    show(context=f"- Restoring `.doctrees` contents from {cachedir} to {doctreedir}...")
+    restore_command_invoked(doctree_dir, cache_dir)
 
 
-@cli.command("build", short_help="command to build Sphinx docs and also execute the `store` and `restore` commands")
-@click.argument('sourcedir', type=click.Path(exists=True, file_okay=False), metavar="<Path>")
-@click.argument('outputdir', type=click.Path(file_okay=False), metavar="<Path>")
-@click.option('--targetdir', required=True, type=click.Path(file_okay=False), metavar="<Path>", help="path to cache "
-                                                                                                     "target directory")
-@optgroup.group("Sphinx's build options",
-                help="The following options are forwarded as-is to Sphinx. Please look at `sphinx-build --help` for "
-                     "more information.")
-@optgroup.option('-b', default='html', help='builder to use (default: html)', show_default=True, metavar="<BUILDER>")
-@optgroup.option('-a', is_flag=True, help="write all files [default: only write new and changed files]")
-@optgroup.option('-E', is_flag=True, help="don't use a saved environment, always read all files")
-@optgroup.option('-d', type=click.Path(file_okay=False), help='path for the cached environment and doctree files [default: OUTPUTDIR/.doctrees]', metavar="<PATH>")
-@optgroup.option('-j', '--jobs', default="1", metavar='N', help="build in parallel with N processes where possible (special value 'auto' will set N to cpu-count)")
-@optgroup.option('-c', type=click.Path(file_okay=False), help='path where configuration file (conf.py) is located [default: same as SOURCEDIR]', metavar="<PATH>")
-@optgroup.option('-D', 'D', multiple=True, default=[], metavar='setting=value', help="override a setting in configuration file")
-@optgroup.option('-A', 'A', multiple=True, default=[], metavar='name=value', help="pass a value into HTML templates")
-@optgroup.option('-t', multiple=True, default=[], metavar='TAG', help="define tag: include 'only' blocks with TAG")
-@optgroup.option('-n', is_flag=True, help="nit-picky mode, warn about all missing references")
-@optgroup.option('-v', count=True, default=0, help="increase verbosity (can be repeated)")
-@optgroup.option('-q', is_flag=True, help="no output on stdout, just warnings on stderr")
-@optgroup.option('-Q', 'Q', is_flag=True, help="no output on stdout, not even warnings")
-@optgroup.option('--color/--no-color', ' /-N', default=False, help="emit or don't emit colored output [default: auto-detect]")
-@optgroup.option('-w', type=click.Path(dir_okay=False), help='write warnings (and errors) to given file', metavar="<FILE>")
-@optgroup.option('-W', 'W', is_flag=True, help="turn warnings into errors")
-@optgroup.option('--keep-going', is_flag=True, help="turn warnings into errors")
-@optgroup.option('-T', 'T', is_flag=True, help="show full traceback on exception")
-@optgroup.option('-P', 'P', is_flag=True, help="run Pdb on exception")
-def sc_build(**params):
+@cli.command(
+    "build",
+    short_help="command to build Sphinx docs and also execute the `store` and `restore` commands",
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.option(
+    "--cachedir",
+    required=True,
+    type=click.Path(file_okay=False),
+    metavar="<Path>",
+    help="path to the directory for caching",
+)
+@click.pass_context
+def sc_build(ctx: click.core.Context, cachedir: str) -> None:
     """
     Command to build Sphinx docs and also execute the `store` and `restore` commands.
 
+    Sphinx's build options: The `sphinx_cache build` command forwards all `sphinx-build`
+    options passed as it is to Sphinx. Please look at `sphinx-build --help` for more information. \f
+
     Args: \n
-    \tSOURCEDIR is path to documentation source directory. \n
-    \tOUTPUTDIR is path to documentation output directory.
+        \tSOURCEDIR is path to documentation source directory. \n
+        \tOUTPUTDIR is path to documentation output directory.
+
+    So the internal workflow is restore -> build -> store
     """
-    pass
+    sourcedir = ctx.args[-2]
+    outputdir = ctx.args[-1]
+    docs_out_dir = Path(os.path.realpath(outputdir))  # path to docs output dir
+
+    cache_dir = Path(os.path.realpath(cachedir))  # path to cache dir
+    doctree_dir = docs_out_dir.joinpath(".doctrees/")  # path to .doctree dir
+
+    show(context="- Running the `sphinx-cache build` command.")
+
+    if not cache_dir.exists():
+        show(context=f"- Creating new cache directory: {cache_dir}...")
+        cache_dir.mkdir(parents=True)
+
+    # Invoke the restore command
+    show(context="- Invoke `sphinx-cache restore` command")
+    ctx.invoke(sc_restore, cachedir=cache_dir, doctreedir=doctree_dir)
+
+    # Invoke Sphinx Build command
+    show(context=f"- Building Sphinx docs from {sourcedir} to {outputdir}")
+    sphinx_build_args = ctx.args  # get only the user-specified Sphinx build arguments
+    sphinx_builder = get_builder(sphinx_build_args)  # build sphinx docs
+    show(context="- ✅Sphinx build was successful.") if sphinx_builder == 0 else show(
+        context="- ❌Sphinx build was unsuccessful."
+    )
+
+    # Invoke the store command
+    show(context="- Invoke `sphinx-cache store` command")
+    ctx.invoke(sc_store, doctreedir=doctree_dir, cachedir=cache_dir)
