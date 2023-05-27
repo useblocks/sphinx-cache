@@ -4,7 +4,7 @@ name = "sphinx-cache"
 # !! Don't miss updates in version.py, and changelog.rst!!!
 version = "0.0.1"
 
-description = "A flexible CLI tool to store and restore Sphinx .doctree cache."
+description = "Sphinx extension for storing and restoring `.doctree` cache."
 authors = ["team useblocks <info@useblocks.com>"]
 license = "MIT"
 readme = "README.rst"
@@ -38,9 +38,6 @@ sphinx = ">=5.0"
 colorama = ">=0.4.6"
 click-option-group = ">=0.5.5"
 
-
-[tool.poetry.scripts]
-sphinx_cache = 'sphinx_cache.__main__:cli'
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2"
@@ -82,7 +79,7 @@ warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = [
-    'sphinx_cache.cli_script',
+    'sphinx_cache.setup',
     'sphinx_cache.logging',
     'sphinx_cache.utils',
     'sphinx_cache.version'

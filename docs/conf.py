@@ -14,7 +14,7 @@ release = "0.0.1"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ["sphinx_cache"]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -34,3 +34,8 @@ rst_prolog = """
    :language: python
    
 """  # noqa: W293
+
+
+# Sphinx-Cache Configuration
+# cache_store_path = ""
+# cache_doctree_path = ""
