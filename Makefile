@@ -1,4 +1,4 @@
-SRC_FILES = sphinx_cache/
+SRC_FILES = sphinx_cache/ tests/
 
 .PHONY: list
 list:
@@ -10,7 +10,7 @@ lint:
 
 .PHONY: test
 test:
-	poetry run pytest --tb=long --ignore=tests/benchmarks tests/
+	poetry run pytest --tb=long tests/
 
 .PHONY: docs-html
 docs-html:
@@ -18,7 +18,7 @@ docs-html:
 
 .PHONY: docs-linkcheck
 docs-linkcheck:
-	poetry run sphinx-build -j auto -b html docs/ docs/_build/linkcheck
+	poetry run sphinx-build -j auto -b linkcheck docs/ docs/_build/linkcheck
 
 .PHONY: format
 format:

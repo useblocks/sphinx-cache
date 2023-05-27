@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from sphinx.application import Sphinx
+from sphinx.config import Config
 
 from sphinx_cache.logging import show
 from sphinx_cache.utils import check_env_pickle_exist
@@ -16,6 +17,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     app.add_config_value("cache_doctree_path", "_build/.doctrees", "html", types=[str])
 
     # Make connections to events
+    app.connect("config-inited", config_init)
     app.connect("builder-inited", build_init)
     app.connect("build-finished", write_cache)
 
@@ -27,15 +29,28 @@ def setup(app: Sphinx) -> Dict[str, Any]:
 
 
 # ----- SPHINX-EVENTS FUNCTIONS ----- #
+def config_init(app: Sphinx, config: Config):
+    """
+    Function to configure the cache_doctree_path as directory for storing pickled doctrees and
+
+    :param app: Sphinx application
+    :param config: Sphinx configuration
+    :return:
+    """
+    doctree_dir = Path(app.confdir).joinpath(config.cache_doctree_path)
+    app.doctreedir = os.path.realpath(doctree_dir)
+    # Create doctrees directory
+    if not doctree_dir.exists():
+        doctree_dir.mkdir(parents=True)
+
+
 def build_init(app: Sphinx) -> None:
     """
-    Function to set the cache_doctree_path as directory for storing pickled doctrees and
-    also call the :meth:`restore_cache()` function to restore cache
+    Function to call the :meth:`restore_cache()` function to restore cache
 
     :param app: Sphinx application
     :return:
     """
-    app.doctreedir = os.path.realpath(Path(app.confdir).joinpath(app.config.cache_doctree_path))
     # Call restore_cache function to restore cache
     restore_cache(app)
 
@@ -115,8 +130,8 @@ def write_cache(app: Sphinx, exception: Exception) -> None:
                 show(context="- ✅ Storing Done")
             except Exception as e:
                 show(context=f"- ❌ Error - Reason: {e}", error=True)
-        else:
-            show(
-                context=f"️- ⚠️ Skipped cache store"
-                f" - Reason: `environment.pickle` file does not exist in {app.config.cache_doctree_path}"
-            )
+    else:
+        show(
+            context=f"️- ⚠️ Skipped cache store"
+            f" - Reason: `environment.pickle` file does not exist in {app.config.cache_doctree_path}"
+        )

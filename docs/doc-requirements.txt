@@ -1,0 +1,5 @@
+sphinx
+sphinx-design
+sphinx-immaterial
+sphinx-autobuild
+sphinx-copybutton
