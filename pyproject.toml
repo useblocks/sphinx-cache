@@ -9,7 +9,7 @@ authors = ["team useblocks <info@useblocks.com>"]
 license = "MIT"
 readme = "README.rst"
 repository = "https://github.com/useblocks/sphinx-cache"
-documentation = "https://useblocks.github.io/sphinx-cache/"
+documentation = "http://sphinx-cache.useblocks.com"
 classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

@@ -1,7 +1,7 @@
 Sphinx-Cache Docs
 =================
 
-Sphinx-Cache is a `Sphinx <https://www.sphinx-doc.org>`_ extension for storing and restoring the `.doctree` cache.
+Sphinx-Cache is a `Sphinx <https://www.sphinx-doc.org>`_ extension for storing and restoring the `.doctrees` cache.
 
 .. _install:
 
