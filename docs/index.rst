@@ -69,8 +69,11 @@ The ``cache_doctree_path`` option specifies the directory path of the doctree fo
 
 .. note::
 
-   The path should be specified as a relative path relative to the directory of the ``conf.py`` file.
-    For example: :python:`cache_doctree_path = '_build/.doctrees'`.
+   * The path should be specified as a relative path relative to the directory of the ``conf.py`` file.
+     For example: :python:`cache_doctree_path = '_build/.doctrees'`.
+   * We use the value provided for the ``cache_doctree_path`` as directory for storing pickled doctrees.
+     If you don't specify the value for the ``cache_doctree_path`` in the ``conf.py`` file, we use the default
+     value for the ``cache_doctree_path`` (i.e. ``_build/.doctrees``).
 
 Default: ``_build/.doctrees``
 

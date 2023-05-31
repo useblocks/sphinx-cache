@@ -19,10 +19,7 @@ def test_restore_cache_skipped_envpickle_404(test_app):
     out_dir = Path(app.outdir)
     output = subprocess.run(["sphinx-build", "-b", "html", src_dir, out_dir], capture_output=True)
     # restore cache skipped because `environment.pickle` is not in cache directory
-    assert (
-        f"⚠️ Skipped cache restore - Reason: `environment.pickle` file not found in {app.config.cache_store_path}"
-        in output.stdout.decode("utf-8")
-    )
+    assert "⚠️ Skipped cache restore because we cannot find any cache to restore." in output.stdout.decode("utf-8")
 
     # store cache was successful
     assert "✅ Storing Done" in output.stdout.decode("utf-8")
@@ -44,10 +41,7 @@ def test_restore_cache_skipped_envpickle_exist(test_app):
     out_dir = Path(app.outdir)
     output = subprocess.run(["sphinx-build", "-b", "html", src_dir, out_dir], capture_output=True)
     # restore cache skipped because `environment.pickle` is not in and cache directory
-    assert (
-        f"⚠️ Skipped cache restore - Reason: `environment.pickle` file not found in {app.config.cache_store_path}"
-        in output.stdout.decode("utf-8")
-    )
+    assert "⚠️ Skipped cache restore because we cannot find any cache to restore." in output.stdout.decode("utf-8")
 
     # store cache was successful
     assert "✅ Storing Done" in output.stdout.decode("utf-8")
@@ -55,10 +49,7 @@ def test_restore_cache_skipped_envpickle_exist(test_app):
     # Second sphinx_build
     output_2 = subprocess.run(["sphinx-build", "-b", "html", src_dir, out_dir], capture_output=True)
     # restore cache skipped because `environment.pickle` is in and .doctrees directory
-    assert (
-        f"⚠️ Skipped cache restore - Reason: `environment.pickle` file "
-        f"exists already in {app.config.cache_doctree_path}" in output_2.stdout.decode("utf-8")
-    )
+    assert "⚠️ Skipped cache restore because we can use the found cache." in output_2.stdout.decode("utf-8")
 
     # store cache was successful
     assert "✅ Storing Done" in output_2.stdout.decode("utf-8")
