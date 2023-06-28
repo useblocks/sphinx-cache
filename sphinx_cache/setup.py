@@ -31,7 +31,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
 # ----- SPHINX-EVENTS FUNCTIONS ----- #
 def config_init(app: Sphinx, config: Config):
     """
-    Function to configure the cache_doctree_path as directory for storing pickled doctrees and
+    Function to configure the cache_doctree_path as directory for storing pickled doctrees.
 
     :param app: Sphinx application
     :param config: Sphinx configuration
@@ -68,16 +68,15 @@ def restore_cache(app: Sphinx) -> None:
 
     env_pickle_exist = check_env_pickle_exist(doctree_dir)
     # Restore cache only if no `environment.pickle` exists in .doctrees directory
-    if not env_pickle_exist:
+    if env_pickle_exist:
+        show(context="- ⚠️ Skipped cache restore because we can use the found cache.")
+    else:
         if not cache_dir.exists():
             show(context=f"- Creating cache directory: {app.config.cache_store_path}")
             cache_dir.mkdir(parents=True)
 
-        if cache_dir.joinpath("environment.pickle") not in cache_dir.iterdir():
-            show(
-                context=f"- ⚠️ Skipped cache restore"
-                f" - Reason: `environment.pickle` file not found in {app.config.cache_store_path}"
-            )
+        if not cache_dir.joinpath("environment.pickle").exists():
+            show(context="- ⚠️ Skipped cache restore because we cannot find any cache to restore.")
         else:
             try:
                 show(
@@ -90,11 +89,6 @@ def restore_cache(app: Sphinx) -> None:
                 show(context="- ✅ Restoring Done")
             except Exception as e:
                 show(context=f"- ❌ Error - Reason: {e}", error=True)
-    else:
-        show(
-            context=f"- ⚠️ Skipped cache restore"
-            f" - Reason: `environment.pickle` file exists already in {app.config.cache_doctree_path}"
-        )
 
 
 def write_cache(app: Sphinx, exception: Exception) -> None:
@@ -109,7 +103,9 @@ def write_cache(app: Sphinx, exception: Exception) -> None:
     cache_dir = Path(app.confdir).joinpath(app.config.cache_store_path)
 
     # Store cache only if no error occurred during Sphinx build
-    if not exception:
+    if exception:
+        show(context="️- ⚠️ Skipped cache store because Sphinx build encountered some errors.")
+    else:
         show(context="- Storing cache...")
 
         if not cache_dir.exists():
@@ -117,7 +113,10 @@ def write_cache(app: Sphinx, exception: Exception) -> None:
             cache_dir.mkdir(parents=True)
 
         env_pickle_exist = check_env_pickle_exist(doctree_dir)
-        if env_pickle_exist:
+        # Store cache only if `environment.pickle` exists in .doctrees directory
+        if not env_pickle_exist:
+            show(context="️- ⚠️ Skipped cache store because we can not find any cache to store.")
+        else:
             try:
                 shutil.rmtree(cache_dir, ignore_errors=True)  # Delete old cache directory
                 show(
@@ -130,8 +129,3 @@ def write_cache(app: Sphinx, exception: Exception) -> None:
                 show(context="- ✅ Storing Done")
             except Exception as e:
                 show(context=f"- ❌ Error - Reason: {e}", error=True)
-    else:
-        show(
-            context=f"️- ⚠️ Skipped cache store"
-            f" - Reason: `environment.pickle` file does not exist in {app.config.cache_doctree_path}"
-        )

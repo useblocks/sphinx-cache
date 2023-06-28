@@ -19,10 +19,7 @@ def test_restore_cache_done(test_app):
     out_dir = Path(app.outdir)
     output = subprocess.run(["sphinx-build", "-b", "html", src_dir, out_dir], capture_output=True)
     # Restore cache skipped because `environment.pickle` is not in cache directory
-    assert (
-        f"⚠️ Skipped cache restore - Reason: `environment.pickle` file not found in {app.config.cache_store_path}"
-        in output.stdout.decode("utf-8")
-    )
+    assert "⚠️ Skipped cache restore because we cannot find any cache to restore." in output.stdout.decode("utf-8")
 
     # Remove `environment.pickle` file from doctree directory
     os.remove(Path(app.doctreedir).joinpath("environment.pickle"))
@@ -54,10 +51,7 @@ def test_store_cache_done(test_app):
     # Second sphinx_build
     output_2 = subprocess.run(["sphinx-build", "-b", "html", src_dir, out_dir], capture_output=True)
     # Restore cache skipped because `environment.pickle` is in and .doctrees directory
-    assert (
-        f"⚠️ Skipped cache restore - Reason: `environment.pickle` file "
-        f"exists already in {app.config.cache_doctree_path}" in output_2.stdout.decode("utf-8")
-    )
+    assert "⚠️ Skipped cache restore because we can use the found cache." in output_2.stdout.decode("utf-8")
 
     # Store cache was successful
     assert "✅ Storing Done" in output_2.stdout.decode("utf-8")

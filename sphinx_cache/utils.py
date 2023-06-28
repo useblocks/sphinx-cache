@@ -10,5 +10,5 @@ def check_env_pickle_exist(doctree_dir: Path) -> Optional[bool]:
     :return: True or False
     """
     if doctree_dir.exists():
-        return doctree_dir.joinpath("environment.pickle") in doctree_dir.iterdir()
+        return doctree_dir.joinpath("environment.pickle").exists()
     return None
