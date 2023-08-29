@@ -54,7 +54,7 @@ The ``cache_store_path`` option specifies the directory path where you want to s
 .. note::
 
    The path should be specified as a relative path relative to the directory of the ``conf.py`` file.
-    For example: :python:`cache_store_path = '.cache/'`.
+    For example: :code:`cache_store_path = '.cache/'`.
 
 Default: ``.cache/``
 
